@@ -63,6 +63,7 @@ public:
 	void close();
 
 	void setupManualGyroBiasEstimation();
+	void gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg);
 
 private:
 	void registerCallback(PacketCallback *cb);
@@ -81,6 +82,15 @@ private:
 	// Timer for Manual Gyro Bias Estimation
 	rclcpp::TimerBase::SharedPtr m_manualGyroBiasTimer;
 	rclcpp::Subscription<mavros_msgs::msg::RTCM>::SharedPtr m_rtcmSubscription;
+	rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr m_gpsSubscription;
+	rclcpp::Subscription<ublox_msgs::msg::NavPVT>::SharedPtr m_navpvtSubscription;
+
+	// NavPVT에서 받은 데이터 캐시
+	int m_cachedNumSv = 0;
+	int m_cachedFixType = 0;
+	int m_cachedVelN = 0;
+	int m_cachedVelE = 0;
+	int m_cachedVelD = 0;
 };
 
 #endif

@@ -43,14 +43,14 @@
 struct GnssPublisher : public PacketCallback
 {
     rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr pub;
-    std::string frame_id = DEFAULT_FRAME_ID;
+    std::string gps_frame_id = DEFAULT_FRAME_ID;
 
     GnssPublisher(rclcpp::Node::SharedPtr node)
     {
         int pub_queue_size = 5;
         node->get_parameter("publisher_queue_size", pub_queue_size);
         pub = node->create_publisher<sensor_msgs::msg::NavSatFix>("/gnss", pub_queue_size);
-        node->get_parameter("frame_id", frame_id);
+        node->get_parameter("gps_frame_id", gps_frame_id);
     }
 
     void operator()(const XsDataPacket &packet, rclcpp::Time timestamp)
@@ -60,7 +60,7 @@ struct GnssPublisher : public PacketCallback
             sensor_msgs::msg::NavSatFix msg;
 
             msg.header.stamp = timestamp;
-            msg.header.frame_id = frame_id;
+            msg.header.frame_id = gps_frame_id;
 
             XsRawGnssPvtData gnss = packet.rawGnssPvtData();
 
