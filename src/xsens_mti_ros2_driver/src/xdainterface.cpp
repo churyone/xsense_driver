@@ -565,12 +565,12 @@ void XdaInterface::gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
     pvtData.m_numSv = m_cachedNumSv;
 
     // 속도: NavPVT에서 보완
-    pvtData.m_vel_n = m_cachedVelN;
-    pvtData.m_vel_e = m_cachedVelE;
-    pvtData.m_vel_d = m_cachedVelD;
+    pvtData.m_velN = m_cachedVelN;
+    pvtData.m_velE = m_cachedVelE;
+    pvtData.m_velD = m_cachedVelD;
 
     // Xsens 장치에 전달
-    XsMessage gpsMsg(XMID_ForwardGnssPvtData, sizeof(XsRawGnssPvtData));
+    XsMessage gpsMsg(XMID_ForwardGnssData, sizeof(XsRawGnssPvtData));
     gpsMsg.setDataBuffer(reinterpret_cast<const uint8_t*>(&pvtData),
                          sizeof(XsRawGnssPvtData), 0);
 
