@@ -35,6 +35,7 @@
 
 #include "packetcallback.h"
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <ublox_msgs/msg/nav_pvt.hpp>
 
 #define FIX_TYPE_2D_FIX (2)
 #define FIX_TYPE_3D_FIX (3)
