@@ -1437,6 +1437,8 @@ void XdaInterface::declareCommonParameters()
 	// for external gps(custom)
 	m_node->declare_parameter("enable_external_gps",false);
 	m_node->declare_parameter("gnss_frame_id", "navsat_link");
+	m_node->declare_parameter<std::string>("gps_topic", "/gps/fix");
+	m_node->declare_parameter<std::string>("navpvt_topic", "/ublox/navpvt");
 
 	bool should_publish = true;
 	m_node->declare_parameter("pub_utctime", should_publish);
