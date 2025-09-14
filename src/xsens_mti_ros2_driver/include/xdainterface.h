@@ -41,6 +41,9 @@
 
 #include <chrono>
 
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <ublox_msgs/msg/nav_pvt.hpp>
+
 struct XsControl;
 struct XsDevice;
 struct XsString;
@@ -63,6 +66,7 @@ public:
 	void close();
 
 	void setupManualGyroBiasEstimation();
+	
 	void gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg);
 
 private:

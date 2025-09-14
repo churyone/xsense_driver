@@ -545,7 +545,7 @@ void XdaInterface::rtcmCallback(const mavros_msgs::msg::RTCM::SharedPtr msg)
 }
 
 // custom gps callback
-void XdaInterface::gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg) 
+void XdaInterface::gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
 {
     if (!m_device) return;
 
