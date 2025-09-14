@@ -1351,14 +1351,19 @@ bool XdaInterface::configureSensorSettings()
 		m_node->get_parameter("enable_external_gps", enable_external_gps);
 
 		if (enable_external_gps) {
+			std::string gps_topic = "/gps/fix";
+			std::string navpvt_topic = "/ublox/navpvt";
+			m_node->get_parameter("gps_topic", gps_topic);
+			m_node->get_parameter("navpvt_topic", navpvt_topic);
+
 			m_gpsSubscription = m_node->create_subscription<sensor_msgs::msg::NavSatFix>(
-					"/gps/fix",
+					gps_topic,
 					10,
 					std::bind(&XdaInterface::gpsCallback, this, std::placeholders::_1)
 			);
 
 			m_navpvtSubscription = m_node->create_subscription<ublox_msgs::msg::NavPVT>(
-        "/ublox_gps/navpvt",
+        navpvt_topic,
         10,
         [this](const ublox_msgs::msg::NavPVT::SharedPtr msg) {
             // NavPVT에서 필요한 확장 정보만 임시 저장

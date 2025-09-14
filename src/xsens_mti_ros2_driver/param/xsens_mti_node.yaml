@@ -240,6 +240,8 @@
 
         # enable external gps (custom)
         enable_external_gps: true
+        gps_topic: "/ublox_gps/fix"
+        navpvt_topic: "/ublox_gps/navpvt"
         gps_frame_id: navsat_link
 
         ##Popular Xbus command
