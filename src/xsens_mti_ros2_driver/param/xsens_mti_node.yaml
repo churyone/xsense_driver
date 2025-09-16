@@ -243,6 +243,9 @@
         gps_topic: "/ublox_gps/fix"
         navpvt_topic: "/ublox_gps/navpvt"
         gps_frame_id: "navsat_link"
+        
+        # enable resetOrentation (custom)
+        enable_reset_orientation: true
 
         ##Popular Xbus command
         # 1) GoToConfig: FA FF 30 00 D1, GoToMeasurement: FA FF 10 00 F1

@@ -72,6 +72,7 @@
 
 #define XS_DEFAULT_BAUDRATE (115200)
 
+// create object
 XdaInterface::XdaInterface(rclcpp::Node::SharedPtr node)
     : m_device(nullptr), m_xdaCallback(node), m_node(node), m_productCode("")
 {
@@ -101,6 +102,7 @@ void XdaInterface::spinFor(std::chrono::milliseconds timeout)
 	}
 }
 
+// Create Publisher Object
 void XdaInterface::registerPublishers()
 {
 	bool should_publish;
@@ -230,6 +232,7 @@ void XdaInterface::registerPublishers()
 		);
 		RCLCPP_INFO(m_node->get_logger(), "Subscribing to /rtcm rostopic");
 	}
+
 }
 
 bool XdaInterface::connectDevice()
@@ -440,6 +443,20 @@ bool XdaInterface::prepare()
 	// Setup Periodic Manual Gyro Bias Estimation
     setupManualGyroBiasEstimation();
 
+	// reset orientation
+	bool enable_reset_orientation = false;
+	if(m_node->get_parameter("enable_reset_orientation", enable_reset_orientation) && enable_reset_orientation)
+	{
+		if (!m_device->resetOrientation())
+		{
+			RCLCPP_WARN(m_node->get_logger(), "Failed to reset orientation to current roll/pitch = 0 reference");
+		}
+		else
+		{
+			RCLCPP_INFO(m_node->get_logger(), "Orientation successfully reset (roll/pitch zeroed, yaw preserved).");
+		}
+	}
+
 	return true;
 }
 
@@ -544,41 +561,6 @@ void XdaInterface::rtcmCallback(const mavros_msgs::msg::RTCM::SharedPtr msg)
 	m_device->sendCustomMessage(rtcm, false, rcv, 0);
 }
 
-// custom gps callback
-void XdaInterface::gpsCallback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
-{
-    if (!m_device) return;
-
-    XsRawGnssPvtData pvtData;
-    memset(&pvtData, 0, sizeof(XsRawGnssPvtData));
-
-    // 위도/경도/고도 변환
-    pvtData.m_lat = static_cast<int32_t>(msg->latitude * 1e7);
-    pvtData.m_lon = static_cast<int32_t>(msg->longitude * 1e7);
-    pvtData.m_height = static_cast<int32_t>(msg->altitude * 1000);
-
-    // Fix 상태: NavSatFix 기본값 또는 NavPVT 보정
-    pvtData.m_fixType = (m_cachedFixType > 0) ? m_cachedFixType :
-                        ((msg->status.status > 0) ? 3 : 0);
-
-    // 위성 수: NavPVT에서 보완
-    pvtData.m_numSv = m_cachedNumSv;
-
-    // 속도: NavPVT에서 보완
-    pvtData.m_velN = m_cachedVelN;
-    pvtData.m_velE = m_cachedVelE;
-    pvtData.m_velD = m_cachedVelD;
-
-    // Xsens 장치에 전달
-    XsMessage gpsMsg(XMID_ForwardGnssData, sizeof(XsRawGnssPvtData));
-    gpsMsg.setDataBuffer(reinterpret_cast<const uint8_t*>(&pvtData),
-                         sizeof(XsRawGnssPvtData), 0);
-
-    XsMessage rcv;
-    if (!m_device->sendCustomMessage(gpsMsg, false, rcv, 0)) {
-        RCLCPP_WARN(m_node->get_logger(), "Failed to send external GPS PVT data to device");
-    }
-}
 
 void XdaInterface::close()
 {
@@ -1346,48 +1328,13 @@ bool XdaInterface::configureSensorSettings()
 
 		}
 
-		//For external gps(custom)
-		bool enable_external_gps = false;
-		m_node->get_parameter("enable_external_gps", enable_external_gps);
-
-		if (enable_external_gps) {
-			std::string gps_topic = "/gps/fix";
-			std::string navpvt_topic = "/ublox/navpvt";
-			m_node->get_parameter("gps_topic", gps_topic);
-			m_node->get_parameter("navpvt_topic", navpvt_topic);
-
-			m_gpsSubscription = m_node->create_subscription<sensor_msgs::msg::NavSatFix>(
-					gps_topic,
-					10,
-					std::bind(&XdaInterface::gpsCallback, this, std::placeholders::_1)
-			);
-
-			m_navpvtSubscription = m_node->create_subscription<ublox_msgs::msg::NavPVT>(
-        navpvt_topic,
-        10,
-        [this](const ublox_msgs::msg::NavPVT::SharedPtr msg) {
-            // NavPVT에서 필요한 확장 정보만 임시 저장
-            m_cachedNumSv = msg->num_sv;
-            m_cachedFixType = msg->fix_type;
-            m_cachedVelN = msg->vel_n;
-            m_cachedVelE = msg->vel_e;
-            m_cachedVelD = msg->vel_d;
-        }
-    	);
-			
-    	RCLCPP_INFO(m_node->get_logger(), "enable external GPS");
-		}
 		//now we sleep a little while, since the configuration commands might take a little time.
 		rclcpp::sleep_for(std::chrono::milliseconds(50));
 
 	}
 
 
-
 	return true;
-
-
-
 }
 
 
@@ -1430,15 +1377,10 @@ void XdaInterface::declareCommonParameters()
 	m_node->declare_parameter("enable_inrun_compass_calibration", false);
 	m_node->declare_parameter("enable_rotsensor_frame_config", false);
 	
+	m_node->declare_parameter("enable_reset_orientation", false);
 
 	m_node->declare_parameter("enable_setting_baudrate", false);
 	m_node->declare_parameter("set_baudrate_value", 115200);
-
-	// for external gps(custom)
-	m_node->declare_parameter("enable_external_gps",false);
-	m_node->declare_parameter("gnss_frame_id", "navsat_link");
-	m_node->declare_parameter<std::string>("gps_topic", "/gps/fix");
-	m_node->declare_parameter<std::string>("navpvt_topic", "/ublox/navpvt");
 
 	bool should_publish = true;
 	m_node->declare_parameter("pub_utctime", should_publish);
@@ -1467,6 +1409,5 @@ void XdaInterface::declareCommonParameters()
 	m_node->declare_parameter("pub_nmea", should_publish);
 	m_node->declare_parameter("pub_gnsspose", should_publish);
 	m_node->declare_parameter("pub_odometry", should_publish);
-
 
 }
