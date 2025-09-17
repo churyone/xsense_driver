@@ -44,9 +44,9 @@ struct GyroBiasPublisher : public PacketCallback
     explicit GyroBiasPublisher(rclcpp::Node::SharedPtr node)
     {
         int pub_queue_size = 5;
-        node->get_parameter("publisher_queue_size", pub_queue_size);
+        // node->get_parameter("publisher_queue_size", pub_queue_size);
         pub = node->create_publisher<geometry_msgs::msg::Vector3Stamped>("/imu/gyro_bias", pub_queue_size);
-        node->get_parameter("frame_id", frame_id);
+        // node->get_parameter("frame_id", frame_id);
     }
 
     void operator()(const XsDataPacket &packet, rclcpp::Time timestamp)
@@ -55,7 +55,7 @@ struct GyroBiasPublisher : public PacketCallback
         {
             geometry_msgs::msg::Vector3Stamped msg;
             msg.header.stamp = timestamp;
-            msg.header.frame_id = frame_id;
+            // msg.header.frame_id = frame_id;
 
             XsVector bias = packet.gyroBias();
             msg.vector.x = bias[0];
