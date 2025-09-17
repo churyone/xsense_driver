@@ -66,6 +66,11 @@
 #include "messagepublishers/accelerationhrpublisher.h"
 #include "messagepublishers/angularvelocityhrpublisher.h"
 #include "messagepublishers/odometrypublisher.h"
+
+// custom publisher
+#include "messagepublishers/gyrobiaspublisher.h"
+#include "messagepublishers/accelbiaspublisher.h"
+
 #include "xsens_log_handler.h"
 #include <xstypes/xsresetmethod.h>
 
@@ -184,6 +189,16 @@ void XdaInterface::registerPublishers()
 		{
 			registerCallback(new TransformPublisher(m_node));
 		}
+
+		// custom publisher register
+		if (m_node->get_parameter("pub_gyro_bias", should_publish) && should_publish)
+    {
+        registerCallback(new GyroBiasPublisher(m_node));
+    }
+    if (m_node->get_parameter("pub_accel_bias", should_publish) && should_publish)
+    {
+        registerCallback(new AccelBiasPublisher(m_node));
+    }
 
 	}
 	
@@ -1455,5 +1470,7 @@ void XdaInterface::declareCommonParameters()
 	m_node->declare_parameter("pub_nmea", should_publish);
 	m_node->declare_parameter("pub_gnsspose", should_publish);
 	m_node->declare_parameter("pub_odometry", should_publish);
+	m_node->declare_parameter("pub_gyro_bias", should_publish);
+	m_node->declare_parameter("pub_accel_bias", should_publish);
 
 }
