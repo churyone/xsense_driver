@@ -243,10 +243,6 @@
         gps_topic: "/ublox_gps/fix"
         navpvt_topic: "/ublox_gps/navpvt"
         gps_frame_id: "navsat_link"
-
-        # publish bias
-        pub_acc_bias: true
-        pub_gyro_bias: true
         
         # enable resetOrentation (custom)
         enable_reset_orientation: true

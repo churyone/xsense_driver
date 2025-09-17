@@ -23,6 +23,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(ublox_msgs REQUIRED)
 
 link_directories(lib/xspublic/xscontroller lib/xspublic/xscommon lib/xspublic/xstypes)
+link_directories(/usr/local/xsens)
 
 # Check ROS distro
 if(DEFINED ENV{ROS_DISTRO})
