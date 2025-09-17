@@ -67,6 +67,7 @@
 #include "messagepublishers/angularvelocityhrpublisher.h"
 #include "messagepublishers/odometrypublisher.h"
 #include "xsens_log_handler.h"
+#include <xstypes/xsresetmethod.h>
 
 #include <chrono>
 
@@ -445,17 +446,62 @@ bool XdaInterface::prepare()
 
 	// reset orientation
 	bool enable_reset_orientation = false;
-	if(m_node->get_parameter("enable_reset_orientation", enable_reset_orientation) && enable_reset_orientation)
+	if (m_node->get_parameter("enable_reset_orientation", enable_reset_orientation) && enable_reset_orientation)
 	{
-		if (!m_device->resetOrientation())
-		{
-			RCLCPP_WARN(m_node->get_logger(), "Failed to reset orientation to current roll/pitch = 0 reference");
-		}
-		else
-		{
-			RCLCPP_INFO(m_node->get_logger(), "Orientation successfully reset (roll/pitch zeroed, yaw preserved).");
+		// MTi-3 필터 옵션: 0=general, 1=high_mag_dep, 2=dynamic, 3=north_reference, 4=vru_general
+		int mti_filter_option = 0;
+		(void)m_node->get_parameter("mti_filter_option", mti_filter_option);
+
+		// 제품코드로 MTi-3 여부 확인 (환경에 따라 productCode 포맷이 다르면 필요 시 조건 조정)
+		const std::string prod = m_productCode.toStdString();
+		const bool is_mti3 = (prod.find("MTi-3") != std::string::npos);
+
+		auto do_reset = [&](XsResetMethod method, const char* ok_msg, const char* fail_msg) {
+			const bool ok = m_device->resetOrientation(method);
+			if (!ok) RCLCPP_WARN(m_node->get_logger(), "%s", fail_msg);
+			else     RCLCPP_INFO(m_node->get_logger(), "%s", ok_msg);
+			return ok;
+		};
+
+		if (!is_mti3) {
+			// MTi-3가 아닌 경우엔 안전하게 전체 정렬로 처리(요청 범위 밖이지만 보호용)
+			do_reset(
+				XRM_Alignment,
+				"Non MTi-3: Orientation reset to current (yaw/pitch/roll = 0).",
+				"Non MTi-3: XRM_Alignment failed."
+			);
+		} else {
+			switch (mti_filter_option) {
+				case 3: // north_reference → 북기준으로 yaw=0 (유저 정렬 오프셋 제거)
+					do_reset(
+						XRM_DefaultAlignment,
+						"MTi-3: Cleared user alignment; using North-referenced yaw=0 (north_reference).",
+						"MTi-3: XRM_DefaultAlignment failed. Ensure 'north_reference' filter is active."
+					);
+					break;
+
+				case 0: // general  → roll/pitch만 0
+				case 1: // high_mag_dep
+				case 2: // dynamic
+					do_reset(
+						XRM_Inclination,  // (= roll/pitch 0, yaw 유지)
+						"MTi-3: Reset inclination → roll/pitch = 0 (yaw preserved).",
+						"MTi-3: XRM_Inclination failed."
+					);
+					break;
+
+				case 4: // vru_general → roll/pitch/yaw 모두 0
+				default:
+					do_reset(
+						XRM_Alignment,    // (= yaw/pitch/roll 모두 0)
+						"MTi-3: Orientation reset to current → yaw/pitch/roll = 0 (vru/general fallback).",
+						"MTi-3: XRM_Alignment failed."
+					);
+					break;
+			}
 		}
 	}
+
 
 	return true;
 }
