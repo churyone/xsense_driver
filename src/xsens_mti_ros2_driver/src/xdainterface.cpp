@@ -442,7 +442,7 @@ bool XdaInterface::prepare()
 	manualGyroBiasEstimation(6);
 
 	// Setup Periodic Manual Gyro Bias Estimation
-    setupManualGyroBiasEstimation();
+	setupManualGyroBiasEstimation();
 
 	// reset orientation
 	bool enable_reset_orientation = false;
@@ -531,6 +531,7 @@ bool XdaInterface::manualGyroBiasEstimation(uint16_t duration)
 	if (!m_device->sendCustomMessage(snd, true, rcv, 1000))
 		return false;
 
+	rclcpp::sleep_for(std::chrono::seconds(duration));
 	return true;
 }
 
@@ -546,10 +547,10 @@ bool XdaInterface::manualGyroBiasEstimation(uint16_t duration)
 
 void XdaInterface::setupManualGyroBiasEstimation()
 {
-    // Check if manual gyro bias estimation is enabled and parameters are available
-    bool enable_manual_gyro_bias = false;
+	// Check if manual gyro bias estimation is enabled and parameters are available
+	bool enable_manual_gyro_bias = false;
 	//assign default value {10,3} to manual_gyro_bias_param
-    std::vector<long int>  manual_gyro_bias_param = {10, 3};
+	std::vector<long int>  manual_gyro_bias_param = {10, 3};
 	m_node->declare_parameter("enable_manual_gyro_bias", enable_manual_gyro_bias);
 	m_node->declare_parameter("manual_gyro_bias_param",manual_gyro_bias_param);
 
