@@ -45,7 +45,7 @@
         # 3) 2: Use UTCTime from the host device.
         # Note: Ensure "UTC Time" or "Sample Time Fine" is selected in MT Manager under Device Settings > Output Configurations, 
         # or you could also set 'enable_outputConfig: true' for once to configure output.
-        time_option: 0
+        time_option: 3
 
         # Logging Configuration
         # ---------------------
@@ -211,7 +211,7 @@
 
         # Enable or disable manual gyro bias estimation.
         # If enabled, specify the 'event_interval' and 'duration' in 'manual_gyro_bias_param'.
-        enable_manual_gyro_bias: true
+        enable_manual_gyro_bias: false
 
         # Parameters for manual gyro bias estimation:
         # - 'event_interval': Time in seconds between two consecutive invocations.

@@ -107,7 +107,8 @@ struct ImuPublisher : public PacketCallback, PublisherHelperFunctions
             std::string frame_id = DEFAULT_FRAME_ID;
             node_handle->get_parameter("frame_id", frame_id);
 
-            msg.header.stamp = node_handle->get_clock()->now();;
+            // msg.header.stamp = node_handle->get_clock()->now();;
+            msg.header.stamp = timestamp;
             msg.header.frame_id = frame_id;
 
             msg.orientation = quaternion;
